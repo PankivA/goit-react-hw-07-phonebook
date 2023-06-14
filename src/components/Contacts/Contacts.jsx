@@ -1,34 +1,45 @@
-import PropTypes from 'prop-types';
-import css from './Contacts.module.css';
-import { useSelector, useDispatch } from 'react-redux';
-import { deleteContact } from 'redux/contacts/contacts-slice';
-import { getFilteredContacts } from 'redux/contacts/contacts-selectors';
+import ContactItem from '../ContactItem/ContactItem';
+import { useSelector } from 'react-redux';
+import { useGetContactsApiQuery } from 'redux/contactsApi';
 
-const ContactsList = () => {
-  const dispatch = useDispatch();
-  const contacts = useSelector(getFilteredContacts);
-  const onDeleteContact = id => {
-    dispatch(deleteContact(id));
+const ContactList = () => {
+  const { data, isLoading } = useGetContactsApiQuery();
+  const filter = useSelector(state => state.filter.value);
+
+  const filteredContacts = () => {
+    const normalizeFilter = filter.toLowerCase();
+    return (
+      data &&
+      data.filter(contact =>
+        contact.name.toLowerCase().includes(normalizeFilter)
+      )
+    );
   };
+
+  const filterEl = filteredContacts();
+
   return (
- <ul>
-    {contacts.map(({id, name, number}) => (
-         <li key={id} className={css.item}>
-            <p>{name}: {number}</p>
-            <button  className={css.button} type="button" onClick={() => onDeleteContact(id)}>DELETE</button>
-        </li>
-    ))}
-</ul>)
-}
+ <>
+      {isLoading && <p>Loading...</p>}
+      {
+        <ul>
+          {!isLoading && data && filterEl.length > 0 ? (
+            filterEl.map(({ id, name, phone }) => (
+              <ContactItem
+                key={id}
+                data={filterEl}
+                id={id}
+                name={name}
+                phone={phone}
+              />
+            ))
+          ) : (
+            <p>No contacts</p>
+          )}
+        </ul>
+      }
+    </>
+  );
+};
 
-ContactsList.propTypes = {
-    list: PropTypes.arrayOf(
-      PropTypes.shape({
-        id: PropTypes.string.isRequired,
-        name: PropTypes.string.isRequired,
-        number: PropTypes.string.isRequired,
-      }),
-    ),
-  };
-
-export default ContactsList
+export default ContactList;

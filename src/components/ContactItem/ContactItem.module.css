@@ -11,8 +11,9 @@
     height: 35px;
     background-color: #efefee;
     border-radius: 5px;
+
     &:hover {
-    background-color: #7a7a7a;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        background-color: #7a7a7a;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
     }
 }

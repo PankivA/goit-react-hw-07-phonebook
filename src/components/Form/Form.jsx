@@ -1,54 +1,51 @@
 import { useState } from 'react';
 import css from './Form.module.css';
-import { addContact } from 'redux/contacts/contacts-slice';
-import { getFilteredContacts } from 'redux/contacts/contacts-selectors';
-import { useSelector, useDispatch } from 'react-redux';
+import {
+  useAddContactMutation,
+  useGetContactsApiQuery,
+} from 'redux/contactsApi';
 
-function Form ({onSubmit}) {
-  const dispatch = useDispatch();
+function Form() {
+const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [addContact] = useAddContactMutation();
+  const { data } = useGetContactsApiQuery();
 
-  const [name, setName] = useState('');
-  const [number, setNumber] = useState('');
+  const handleChange = e => {
+    const prop = e.currentTarget.name;
+    switch (prop) {
+      case 'name':
+        setName(e.currentTarget.value);
+        break;
+      case 'phone':
+        setPhone(e.currentTarget.value);
+        break;
+      default:
+        throw new Error('Error');
+    }
+  };
 
-  const contacts = useSelector(getFilteredContacts);
-   
-    
-    const handleChange = evt => {
-      const { name, value } = evt.target;
-      switch (name) {
-        case 'name':
-         setName(value);
-         break;
-    
-        case 'number':
-         setNumber(value);
-         break;
-    
-        default:
-         return;   
-        }
-    };
-
-    const handleSubmit = event => {
-      event.preventDefault();
-  
-      const isContactExist = contacts.find(
-        contact => contact.name.toLowerCase() === name.toLowerCase()
-      );
-      if (isContactExist) {
-        alert(`User with name ${name} is already in contacts`);
-        return;
-      }
-  
-      dispatch(addContact({ name, number }));
+  const handleAddContact = async e => {
+    e.preventDefault();
+    if (
+      data.find(contact => contact.name.toLowerCase() === name.toLowerCase())
+    ) {
       setName('');
-      setNumber('');
-    };
+      setPhone('');
+      return alert(`Number: ${name} is already in phonebook`);
+    }
+    if (name && phone) {
+      await addContact({ name: name, phone: phone }).unwrap();
+      setName('');
+      setPhone('');
+    }
+  };
+
 
     return (
-      <form className={css.form} onSubmit = {handleSubmit}>
+      <form className={css.form} onSubmit = {handleAddContact}>
         <div className={css.wrapper} >
-          <label className={css.label} htmlFor="nameInput">
+          <label className={css.label}>
             Name
           </label>
             <input
@@ -69,12 +66,12 @@ function Form ({onSubmit}) {
             <input
             className={css.input} 
             type="tel"
-            name="number"
+            name="phone"
             pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
             title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
             required
             onChange={handleChange}
-            value={number}
+            value={phone}
           />
           </div>
           <button type="submit" className={css.button}>
